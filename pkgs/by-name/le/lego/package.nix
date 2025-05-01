@@ -7,13 +7,13 @@
 
 buildGoModule rec {
   pname = "lego";
-  version = "4.23.1-3";
+  version = "4.23.1-4";
 
   src = fetchFromGitHub {
     owner = "ropwareJB";
     repo = "lego";
     tag = "v${version}";
-    hash = "sha256-6cCE/1HVdKns2BkkA2jDU9vI2kf1dBV89CRbL3lPtc4=";
+    hash = "sha256-cdDzERV9NvtwtzvCIQKhwSODSdLmYFCYeZdxc0jP+d0=";
   };
 
   vendorHash = "sha256-L9fjkSrWoP4vs+BlWyEgK+SF3tWQFiEJjd0fJqcruVM=";

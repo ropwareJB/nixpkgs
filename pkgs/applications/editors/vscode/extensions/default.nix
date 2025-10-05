@@ -5692,6 +5692,26 @@ let
           license = lib.licenses.mit;
         };
       };
+
+      github.vscode-codeql = buildVscodeMarketplaceExtension {
+        mktplcRef = {
+          name = "vscode-codeql";
+          publisher = "github";
+          version = "1.17.5";
+          sha256 = "sha256-f3aVD/jMxhEFq0czCWOlUrE2u+HUYSx5uU3VrUVrbuQ=";
+        };
+        nativeBuildInputs = [
+          # jq
+          # moreutils
+        ];
+        postInstall = ''
+        '';
+          # cd "$out/$installPrefix"
+          # jq '.contributes.configuration.properties.protoc.properties.path.default = "${protobuf}/bin/protoc"' package.json | sponge package.json
+        meta = {
+          license = lib.licenses.mit;
+        };
+      };
     };
 
   aliases = super: {

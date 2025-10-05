@@ -17,19 +17,30 @@ let
     self = python;
     packageOverrides = self: super: {
       esphome-dashboard = self.callPackage ./dashboard.nix { };
+
+      paho-mqtt = super.paho-mqtt.overridePythonAttrs (oldAttrs: rec {
+        version = "1.6.1";
+        src = fetchFromGitHub {
+          inherit (oldAttrs.src) owner repo;
+          tag = "v${version}";
+          hash = "sha256-9nH6xROVpmI+iTKXfwv2Ar1PAmWbEunI3HO0pZyK6Rg=";
+        };
+        build-system = with self; [ setuptools ];
+        doCheck = false;
+      });
     };
   };
 in
 python.pkgs.buildPythonApplication rec {
   pname = "esphome";
-  version = "2025.4.1";
+  version = "2025.4.2";
   pyproject = true;
 
   src = fetchFromGitHub {
     owner = pname;
     repo = pname;
     tag = version;
-    hash = "sha256-EWSV87z0Npsf/1lDzbk2s4Phx0tZJZnMzubaX+W6fAY=";
+    hash = "sha256-vy/wjtl/IbdSOxAUsV4bl7VNEBTetsvIDh2V1gDHSMs=";
   };
 
   build-systems = with python.pkgs; [

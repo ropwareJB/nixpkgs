@@ -880,6 +880,7 @@ stdenvNoCC.mkDerivation {
       cc = optionalString (!nativeTools) cc;
       wrapperName = "CC_WRAPPER";
       inherit suffixSalt coreutils_bin bintools;
+      bintools_targetPrefix = bintools.targetPrefix;
       inherit libc_bin libc_dev libc_lib;
       inherit darwinPlatformForCC;
       default_hardening_flags_str = builtins.toString defaultHardeningFlags;
@@ -888,7 +889,7 @@ stdenvNoCC.mkDerivation {
       # These will become empty strings when not targeting Darwin.
       inherit (targetPlatform) darwinMinVersion darwinMinVersionVariable;
     }
-    // lib.optionalAttrs (apple-sdk != null && stdenvNoCC.targetPlatform.isDarwin) {
+    // lib.optionalAttrs (stdenvNoCC.targetPlatform.isDarwin && apple-sdk != null) {
       # Wrapped compilers should do something useful even when no SDK is provided at `DEVELOPER_DIR`.
       fallback_sdk = apple-sdk.__spliced.buildTarget or apple-sdk;
     };

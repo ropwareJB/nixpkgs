@@ -162,8 +162,22 @@ let
       extraFlags+=("--network-namespace-path=$NETWORK_NAMESPACE_PATH")
     fi
 
+    declare -a extraCapabilities
+
+    if [[ -n "''${ADDITIONAL_CAPABILITIES-}" ]]; then
+      OIFS=$IFS
+      IFS="," read -ra extraCapabilities <<< "$ADDITIONAL_CAPABILITIES"
+      IFS=$OIFS
+    fi
+
     if [[ "''${ENABLE_TUN-}" = 1 ]]; then
-      extraFlags+=("--capability=CAP_NET_ADMIN")
+      extraCapabilities+=("CAP_NET_ADMIN")
+    fi
+
+    if [[ ''${#extraCapabilities[@]} -gt 0 ]]; then
+      OIFS=$IFS
+      IFS="," extraFlags+=("--capability=''${extraCapabilities[*]}")
+      IFS=$OIFS
     fi
 
     extraFlags+=(${lib.escapeShellArgs (mapAttrsToList nspawnExtraVethArgs cfg.extraVeths)})

@@ -13,7 +13,7 @@ for flag in nixos-path system-path config-file;
     complete -c nixos-container -n "__fish_seen_subcommand_from create" -l $flag -Fr
 end
 
-for flag in config flake ensure-unique-name auto-start bridge port host-address local-address use-host-network enable-tun;
+for flag in config flake ensure-unique-name auto-start bridge port host-address local-address use-host-network enable-tun additional-capability;
     complete -c nixos-container -n "__fish_seen_subcommand_from create" -l $flag
 end
 

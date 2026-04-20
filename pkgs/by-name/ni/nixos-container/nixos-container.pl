@@ -45,6 +45,7 @@ Usage: nixos-container list
          [--local-address <string>]
          [--use-host-network]
          [--enable-tun]
+         [--additional-capability <string>] ...
        nixos-container destroy <container-name>
        nixos-container restart <container-name>
        nixos-container start <container-name>
@@ -79,6 +80,7 @@ my $hostAddress;
 my $localAddress;
 my $useHostNetwork = 0;
 my $enableTun = 0;
+my @additionalCapabilities;
 my $flake;
 my $flakeAttr = "container";
 
@@ -113,6 +115,7 @@ GetOptions(
     "local-address=s" => \$localAddress,
     "use-host-network" => \$useHostNetwork,
     "enable-tun" => \$enableTun,
+    "additional-capability=s@" => \@additionalCapabilities,
     "flake=s" => \$flake,
     # Nix passthru options.
     "log-format=s" => \&copyNixFlags1,
@@ -285,6 +288,7 @@ if ($action eq "create") {
     push @conf, "HOST_PORT=$port\n";
     push @conf, "AUTO_START=$autoStart\n";
     push @conf, "ENABLE_TUN=1\n" if $enableTun;
+    push @conf, "ADDITIONAL_CAPABILITIES=" . join(",", @additionalCapabilities) . "\n" if @additionalCapabilities;
     push @conf, "FLAKE=$flake\n" if defined $flake;
     write_file($confFile, \@conf);
 

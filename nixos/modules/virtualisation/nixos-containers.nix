@@ -162,6 +162,10 @@ let
       extraFlags+=("--network-namespace-path=$NETWORK_NAMESPACE_PATH")
     fi
 
+    if [[ "''${ENABLE_TUN-}" = 1 ]]; then
+      extraFlags+=("--capability=CAP_NET_ADMIN")
+    fi
+
     extraFlags+=(${lib.escapeShellArgs (mapAttrsToList nspawnExtraVethArgs cfg.extraVeths)})
 
     for iface in ''${INTERFACES-}; do
@@ -1003,7 +1007,9 @@ in
             [
               {
                 name = "container@";
-                value = unit;
+                value = recursiveUpdate unit {
+                  serviceConfig.DeviceAllow = [ "/dev/net/tun rwm" ];
+                };
               }
             ]
             # declarative containers

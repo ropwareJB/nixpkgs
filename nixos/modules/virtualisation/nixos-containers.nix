@@ -162,7 +162,7 @@ let
       extraFlags+=("--network-namespace-path=$NETWORK_NAMESPACE_PATH")
     fi
 
-    declare -a extraCapabilities
+    declare -a extraCapabilities=()
 
     if [[ -n "''${ADDITIONAL_CAPABILITIES-}" ]]; then
       OIFS=$IFS

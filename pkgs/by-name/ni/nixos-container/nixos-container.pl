@@ -45,6 +45,8 @@ Usage: nixos-container list
          [--local-address <string>]
          [--use-host-network]
          [--enable-tun]
+         [--bind <path[:path[:options]]>]
+         [--bind-ro <path[:path[:options]]>]
          [--additional-capability <string>] ...
        nixos-container destroy <container-name>
        nixos-container restart <container-name>
@@ -81,6 +83,8 @@ my $localAddress;
 my $useHostNetwork = 0;
 my $enableTun = 0;
 my @additionalCapabilities;
+my @bindMounts;
+my @bindReadOnlyMounts;
 my $flake;
 my $flakeAttr = "container";
 
@@ -115,6 +119,8 @@ GetOptions(
     "local-address=s" => \$localAddress,
     "use-host-network" => \$useHostNetwork,
     "enable-tun" => \$enableTun,
+    "bind=s@" => \@bindMounts,
+    "bind-ro=s@" => \@bindReadOnlyMounts,
     "additional-capability=s@" => \@additionalCapabilities,
     "flake=s" => \$flake,
     # Nix passthru options.
@@ -140,6 +146,10 @@ if (defined $hostAddress and !defined $localAddress or defined $localAddress and
 
 if ($useHostNetwork && (defined $hostAddress || defined $localAddress)) {
     die "--use-host-network cannot be used with --host-address or --local-address!";
+}
+
+foreach my $bindMount (@bindMounts, @bindReadOnlyMounts) {
+    die "bind mount paths must not contain whitespace or double quotes\n" if $bindMount =~ /[\s"]/;
 }
 
 my $action = $ARGV[0] or die "$0: no action specified\n";
@@ -289,6 +299,10 @@ if ($action eq "create") {
     push @conf, "AUTO_START=$autoStart\n";
     push @conf, "ENABLE_TUN=1\n" if $enableTun;
     push @conf, "ADDITIONAL_CAPABILITIES=" . join(",", @additionalCapabilities) . "\n" if @additionalCapabilities;
+    my @extraNspawnFlags;
+    push @extraNspawnFlags, map { "--bind=$_" } @bindMounts;
+    push @extraNspawnFlags, map { "--bind-ro=$_" } @bindReadOnlyMounts;
+    push @conf, "EXTRA_NSPAWN_FLAGS=\"" . join(" ", @extraNspawnFlags) . "\"\n" if @extraNspawnFlags;
     push @conf, "FLAKE=$flake\n" if defined $flake;
     write_file($confFile, \@conf);
 

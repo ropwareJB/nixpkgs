@@ -172,6 +172,20 @@
           )
           machine.succeed("nixos-container destroy tmpfiles")
 
+      with subtest("Bind mount host directories into an imperative container"):
+          machine.succeed(
+              "mkdir -p /bindmount-host",
+              "echo mounted > /bindmount-host/source",
+              "nixos-container create bindmount --bind /bindmount-host:/mnt/rw --bind-ro /bindmount-host:/mnt/ro",
+              "nixos-container start bindmount",
+              "nixos-container run bindmount -- grep -qF mounted /mnt/rw/source",
+              "nixos-container run bindmount -- grep -qF mounted /mnt/ro/source",
+              "nixos-container run bindmount -- touch /mnt/rw/writable",
+              "test -e /bindmount-host/writable",
+          )
+          machine.fail("nixos-container run bindmount -- touch /mnt/ro/readonly")
+          machine.succeed("nixos-container destroy bindmount")
+
       with subtest("Execute commands via the root shell"):
           assert "Linux" in machine.succeed(f"nixos-container run {id1} -- uname")
 

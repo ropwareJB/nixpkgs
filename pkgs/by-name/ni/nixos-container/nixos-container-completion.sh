@@ -7,6 +7,7 @@ _nixos-container() {
     prev="${COMP_WORDS[COMP_CWORD-1]}"
     opts="list create destroy restart start stop status update login root-login run show-ip show-host-key"
     startstop_opts=$(nixos-container list)
+    create_opts="--nixos-path --system-path --config --config-file --flake --ensure-unique-name --auto-start --bridge --port --host-address --local-address --use-host-network --enable-tun --bind --bind-ro --additional-capability"
     update_opts="--config"
 
     if [[ "$prev" == "nixos-container" ]]
@@ -25,9 +26,12 @@ _nixos-container() {
         then
             COMPREPLY=( $(compgen -W "${update_opts}" -- ${cur}) )
             return 0
+        elif [[ "$prev" == "create" ]]
+        then
+            COMPREPLY=( $(compgen -W "${create_opts}" -- ${cur}) )
+            return 0
         fi
     fi
 }
 
 complete -F _nixos-container nixos-container
-

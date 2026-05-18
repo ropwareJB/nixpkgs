@@ -1,4 +1,4 @@
-set -l containercmds destroy restart start stop terminate status update login root-login run show-ip show-host-key
+set -l containercmds destroy restart start stop terminate status set-bind-mounts update login root-login run show-ip show-host-key
 set -l subcommands list create $containercmds
 
 complete -c nixos-container -f
@@ -15,6 +15,11 @@ end
 
 for flag in config flake ensure-unique-name auto-start bridge port host-address local-address use-host-network enable-tun bind bind-ro additional-capability;
     complete -c nixos-container -n "__fish_seen_subcommand_from create" -l $flag
+end
+
+# set-bind-mounts flags
+for flag in bind bind-ro;
+    complete -c nixos-container -n "__fish_seen_subcommand_from set-bind-mounts" -l $flag
 end
 
 # update flags

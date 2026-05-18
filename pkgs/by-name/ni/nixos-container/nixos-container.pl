@@ -54,6 +54,9 @@ Usage: nixos-container list
        nixos-container stop <container-name>
        nixos-container terminate <container-name>
        nixos-container status <container-name>
+       nixos-container set-bind-mounts <container-name>
+         [--bind <path[:path[:options]]>] ...
+         [--bind-ro <path[:path[:options]]>] ...
        nixos-container update <container-name>
          [--config <string>]
          [--config-file <path>]
@@ -150,6 +153,13 @@ if ($useHostNetwork && (defined $hostAddress || defined $localAddress)) {
 
 foreach my $bindMount (@bindMounts, @bindReadOnlyMounts) {
     die "bind mount paths must not contain whitespace or double quotes\n" if $bindMount =~ /[\s"]/;
+}
+
+sub makeExtraNspawnFlags {
+    my @extraNspawnFlags;
+    push @extraNspawnFlags, map { "--bind=$_" } @bindMounts;
+    push @extraNspawnFlags, map { "--bind-ro=$_" } @bindReadOnlyMounts;
+    return @extraNspawnFlags ? "EXTRA_NSPAWN_FLAGS=\"" . join(" ", @extraNspawnFlags) . "\"\n" : "";
 }
 
 my $action = $ARGV[0] or die "$0: no action specified\n";
@@ -299,10 +309,8 @@ if ($action eq "create") {
     push @conf, "AUTO_START=$autoStart\n";
     push @conf, "ENABLE_TUN=1\n" if $enableTun;
     push @conf, "ADDITIONAL_CAPABILITIES=" . join(",", @additionalCapabilities) . "\n" if @additionalCapabilities;
-    my @extraNspawnFlags;
-    push @extraNspawnFlags, map { "--bind=$_" } @bindMounts;
-    push @extraNspawnFlags, map { "--bind-ro=$_" } @bindReadOnlyMounts;
-    push @conf, "EXTRA_NSPAWN_FLAGS=\"" . join(" ", @extraNspawnFlags) . "\"\n" if @extraNspawnFlags;
+    my $extraNspawnFlags = makeExtraNspawnFlags;
+    push @conf, $extraNspawnFlags if $extraNspawnFlags;
     push @conf, "FLAKE=$flake\n" if defined $flake;
     write_file($confFile, \@conf);
 
@@ -483,6 +491,26 @@ elsif ($action eq "terminate") {
 
 elsif ($action eq "status") {
     print isContainerRunning() ? "up" : "down", "\n";
+}
+
+elsif ($action eq "set-bind-mounts") {
+    die "$0: cannot modify declarative container (change it in your configuration.nix instead)\n"
+        unless POSIX::access($confFile, &POSIX::W_OK);
+
+    my $s = read_file($confFile) or die;
+    my $extraNspawnFlags = makeExtraNspawnFlags;
+    if ($s =~ /^EXTRA_NSPAWN_FLAGS=.*$/m) {
+        if ($extraNspawnFlags) {
+            $s =~ s/^EXTRA_NSPAWN_FLAGS=.*\n?/$extraNspawnFlags/m;
+        } else {
+            $s =~ s/^EXTRA_NSPAWN_FLAGS=.*\n?//m;
+        }
+    } elsif ($extraNspawnFlags) {
+        $s .= $extraNspawnFlags;
+    }
+    write_file($confFile, $s);
+
+    print STDERR "restart the container for bind mount changes to take effect\n" if isContainerRunning;
 }
 
 elsif ($action eq "update") {

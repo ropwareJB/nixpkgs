@@ -184,6 +184,14 @@
               "test -e /bindmount-host/writable",
           )
           machine.fail("nixos-container run bindmount -- touch /mnt/ro/readonly")
+          machine.succeed(
+              "mkdir -p /bindmount-host-2",
+              "echo changed > /bindmount-host-2/source",
+              "nixos-container set-bind-mounts bindmount --bind /bindmount-host-2:/mnt/changed",
+              "nixos-container restart bindmount",
+              "nixos-container run bindmount -- grep -qF changed /mnt/changed/source",
+              "nixos-container run bindmount -- test ! -e /mnt/rw/source",
+          )
           machine.succeed("nixos-container destroy bindmount")
 
       with subtest("Execute commands via the root shell"):
